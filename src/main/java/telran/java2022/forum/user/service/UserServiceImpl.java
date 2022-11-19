@@ -1,5 +1,7 @@
 package telran.java2022.forum.user.service;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -13,6 +15,7 @@ import telran.java2022.forum.user.dto.RegisterDto;
 import telran.java2022.forum.user.dto.UpdateUserDto;
 import telran.java2022.forum.user.dto.UserDto;
 import telran.java2022.forum.user.dto.exceptions.LoginTakenException;
+import telran.java2022.forum.user.dto.exceptions.PasswordAlreadyUsedException;
 import telran.java2022.forum.user.dto.exceptions.UserNotFoundException;
 import telran.java2022.forum.user.model.User;
 
@@ -33,6 +36,8 @@ public class UserServiceImpl implements UserService, CommandLineRunner {
 		User user = modelMapper.map(registerDto, User.class);
 
 		user.setPassword(passwordEncoder.encode(registerDto.getPassword()));
+		
+		user.setPasswordExpiration(LocalDateTime.now().plus(30, ChronoUnit.SECONDS));
 
 		user = userRepository.save(user);
 
@@ -97,8 +102,16 @@ public class UserServiceImpl implements UserService, CommandLineRunner {
 	public void changePassword(String login, String newPassword) {
 		User user = userRepository.findById(login)
 				.orElseThrow(() -> new UserNotFoundException(login));
+		
+		String encodedPassword = passwordEncoder.encode(newPassword);
+		
+		if (encodedPassword.equals(user.getPassword())) {
+			throw new PasswordAlreadyUsedException();
+		}
 
-		user.setPassword(passwordEncoder.encode(newPassword));
+		user.setPassword(encodedPassword);
+		
+		user.setPasswordExpiration(LocalDateTime.now().plus(30, ChronoUnit.SECONDS));
 
 		user = userRepository.save(user);
 	}
