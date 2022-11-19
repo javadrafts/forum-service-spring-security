@@ -36,11 +36,13 @@ public class UserController {
 	}
 
 	@DeleteMapping("user/{login}")
+//	@PreAuthorize("#login.equals(authentication.name) or hasRole('ADMINISTRATOR')")
 	public UserDto deleteUser(@PathVariable String login) {
 		return userService.deleteUser(login);
 	}
 
 	@PutMapping("user/{login}")
+//	@PreAuthorize("#login.equals(authentication.name)")
 	public UserDto updateUser(@PathVariable String login, @RequestBody UpdateUserDto updateUserDto) {
 		return userService.updateUser(login, updateUserDto);
 	}
